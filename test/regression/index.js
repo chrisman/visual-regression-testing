@@ -3,6 +3,36 @@ const puppeteer = require('puppeteer');
 const compareImages = require('resemblejs/compareImages');
 const fs = require('mz/fs');
 
+const url = 'http://localhost:8000';
+const path = 'test/regression'
+const dirs = {
+  blessed: 'blessedImages',
+  diffs: 'diffs',
+  test: 'screenshots',
+}
+const screensizes = [
+  '800x600',
+  '768x1024', // iPad
+  '375x812',  // iPhone X/XS
+];
+const compareImagesOptions = {
+  output: {
+    errorColor: {
+      red: 255,
+      green: 0,
+      blue: 255
+    },
+    errorType: "movement",
+    transparency: 0.3,
+    largeImageThreshold: 1200,
+    useCrossOrigin: false,
+    outputDiff: true
+  },
+  scaleToSameSize: true,
+  ignore: "antialiasing"
+};
+
+//helper functions
 const asyncWrapper = (run) => (test) => {
   try {
     Promise.resolve(run(test)).then(
@@ -16,62 +46,46 @@ const asyncWrapper = (run) => (test) => {
     test.end(error);
   }
 }
-
 const test = (desciption, run) => {
   return tape(desciption, asyncWrapper(run));
 }
 
-tape.skip("promises are great", async t => {
+//tests
+test("async test", async t => {
   await new Promise(resolve => setTimeout(resolve, 1000));
-
   t.ok(true);
 });
 
-test("puppeteer", async t => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+test("index", async t => {
+  screensizes.forEach(async screensize => {
+    const filename = `${screensize}/index`;
+    const [ width, height ] = screensize
+      .split('x')
+      .map(str => Number(str));
 
-  const route = undefined;
-  const screensize = '800x600';
-  const screenshotDir = 'test/regression/screenshots';
-  const filename = `${screensize}/${route || 'index'}`;
-  //const url = 'http://localhost:3000';
-  const url = 'https://example.com';
+    const browser  = await puppeteer.launch();
+    const page     = await browser.newPage();
 
-  await page.goto(`${url}/${route || 'index'}`);
-  await page.screenshot({
-    path: `${screenshotDir}/${filename}.png`
+    await page.setViewport({ width, height })
+    await page.goto(url);
+    await page.screenshot({
+      path: `${path}/${dirs.test}/${filename}.png`,
+      fullPage: true,
+    });
+
+    await browser.close();
+
+    const [ screenshot, blessed ] = await Promise.all([
+      await fs.readFile(`./${path}/${dirs.blessed}/${filename}.png`),
+      await fs.readFile(`./${path}/${dirs.test}/${filename}.png`)
+    ]);
+
+    const diff = await compareImages(screenshot, blessed, compareImagesOptions);
+
+    await fs.writeFile(`${path}/${dirs.diffs}/${filename}.png`, diff.getBuffer());
+
+    const ACTUAL = Number(diff.misMatchPercentage);
+    const EXPECTED = 0;
+    t.equal(ACTUAL, EXPECTED, `${screensize}/index is off by ${ACTUAL}%`);
   });
-
-  await browser.close();
-
-  const options = {
-    output: {
-      errorColor: {
-        red: 255,
-        green: 0,
-        blue: 255
-      },
-      errorType: "movement",
-      transparency: 0.3,
-      largeImageThreshold: 1200,
-      useCrossOrigin: false,
-      outputDiff: true
-    },
-    scaleToSameSize: true,
-    ignore: "antialiasing"
-  };
-
-  const [ screenshot, blessed ] = await Promise.all([
-    await fs.readFile('./test/regression/blessedImages/800x600/index.png'),
-    await fs.readFile('./test/regression/screenshots/800x600/index.png')
-  ]);
-
-  const data = await compareImages(screenshot, blessed, options);
-
-  await fs.writeFile(`test/regression/diffs/800x600/index.png`, data.getBuffer());
-
-  const ACTUAL = Number(data.misMatchPercentage);
-  const EXPECTED = 0;
-  t.equal(ACTUAL, EXPECTED);
 });
