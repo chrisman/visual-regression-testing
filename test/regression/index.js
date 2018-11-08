@@ -18,12 +18,12 @@ const screensizes = [
 const compareImagesOptions = {
   output: {
     errorColor: {
-      red: 255,
-      green: 0,
-      blue: 255
+      red: 0,
+      green: 255,
+      blue: 0
     },
     errorType: "movement",
-    transparency: 0.3,
+    transparency: 0.8,
     largeImageThreshold: 1200,
     useCrossOrigin: false,
     outputDiff: true
@@ -51,10 +51,12 @@ const test = (desciption, run) => {
 }
 
 //tests
+/*
 test("async test", async t => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   t.ok(true);
 });
+*/
 
 test("index", async t => {
   screensizes.forEach(async screensize => {
@@ -80,12 +82,12 @@ test("index", async t => {
       await fs.readFile(`./${path}/${dirs.test}/${filename}.png`)
     ]);
 
-    const diff = await compareImages(screenshot, blessed, compareImagesOptions);
+    const diff = await compareImages(blessed, screenshot, compareImagesOptions);
 
     await fs.writeFile(`${path}/${dirs.diffs}/${filename}.png`, diff.getBuffer());
 
     const ACTUAL = Number(diff.misMatchPercentage);
     const EXPECTED = 0;
-    t.equal(ACTUAL, EXPECTED, `${screensize}/index is off by ${ACTUAL}%`);
+    t.equal(ACTUAL, EXPECTED, `${screensize}/index is off by ${ACTUAL}%. see: ${path}/${dirs.diffs}/${filename}.png`);
   });
 });

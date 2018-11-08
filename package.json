@@ -1,12 +1,16 @@
 {
-  "dependencies": {
-    "faucet": "^0.0.1",
-    "mz": "^2.7.0",
-    "puppeteer": "^1.5.0",
-    "resemblejs": "^2.10.3",
-    "tape": "^4.9.1"
-  },
+  "description": "visual regression testing proof of concept",
+  "license": "WTFPL",
+  "dependencies": {},
   "scripts": {
-    "test/regression": "node test/regression | faucet"
+    "dev": "cd src && python -m SimpleHTTPServer",
+    "test/regression": "node test/regression | tap-nyan"
+  },
+  "devDependencies": {
+    "mz": "^2.7.0",
+    "puppeteer": "^1.10.0",
+    "resemblejs": "^2.10.3",
+    "tap-nyan": "^1.1.0",
+    "tape": "^4.9.1"
   }
 }
