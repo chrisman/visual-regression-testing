@@ -142,7 +142,7 @@ rainbow, the stuff of your dreams.
 ![first image](docs/first.png)
 
 Here's a screenshot of the site that was just taken. It is not "blessed"
-but it's not necessarily cursed either. The point is we don't know it's state.
+but it's not necessarily cursed either. The point is we don't know its state.
 All we know is that it's what the site looks like right now, and that you want
 to measure its conformity to the "blessed" version of the same page.
 
